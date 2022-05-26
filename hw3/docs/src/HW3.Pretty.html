@@ -1,0 +1,443 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">HW3.Pretty</span><span>
+</span><span id="line-2"></span><span>  </span><span class="hs-special">(</span><span>
+</span><span id="line-3"></span><span>    </span><span class="annot"><a href="HW3.Pretty.html#prettyValue"><span class="hs-identifier">prettyValue</span></a></span><span>
+</span><span id="line-4"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-5"></span><span>
+</span><span id="line-6"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">Data.ByteString</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">BS</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">ByteString</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">unpack</span></span><span class="hs-special">)</span><span>
+</span><span id="line-7"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Map.Strict</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">assocs</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">lookup</span></span><span class="hs-special">)</span><span>
+</span><span id="line-8"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Ratio</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">denominator</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">numerator</span></span><span class="hs-special">)</span><span>
+</span><span id="line-9"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Scientific</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">FPFormat</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Fixed</span></span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">formatScientific</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">fromRationalRepetendUnlimited</span></span><span class="hs-special">)</span><span>
+</span><span id="line-10"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="HW3.Base.html"><span class="hs-identifier">HW3.Base</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="HW3.Base.html#HiAction"><span class="hs-identifier">HiAction</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><a href="HW3.Base.html#HiValue"><span class="hs-identifier">HiValue</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-11"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="HW3.BaseUtility.html"><span class="hs-identifier">HW3.BaseUtility</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="HW3.BaseUtility.html#funNamesMap"><span class="hs-identifier">funNamesMap</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-12"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Prettyprinter</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Doc</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">Pretty</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">pretty</span></span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">viaShow</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-operator">(&lt;+&gt;)</span></span><span class="hs-special">)</span><span>
+</span><span id="line-13"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Prettyprinter.Render.Terminal</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">AnsiStyle</span></span><span class="hs-special">)</span><span>
+</span><span id="line-14"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Text.Printf</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">printf</span></span><span class="hs-special">)</span><span>
+</span><span id="line-15"></span><span>
+</span><span id="line-16"></span><span class="hs-comment">-- | Prettifies `q` + `r` / `den` ratio.</span><span>
+</span><span id="line-17"></span><span class="annot"><a href="HW3.Pretty.html#prettyMixedFraction"><span class="hs-identifier hs-type">prettyMixedFraction</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Integer</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Integer</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Integer</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Doc</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">AnsiStyle</span></span><span>
+</span><span id="line-18"></span><span id="prettyMixedFraction"><span class="annot"><span class="annottext">prettyMixedFraction :: Integer -&gt; Integer -&gt; Integer -&gt; Doc AnsiStyle
+</span><a href="HW3.Pretty.html#prettyMixedFraction"><span class="hs-identifier hs-var hs-var">prettyMixedFraction</span></a></span></span><span> </span><span id="local-6989586621679095370"><span class="annot"><span class="annottext">Integer
+</span><a href="#local-6989586621679095370"><span class="hs-identifier hs-var">q</span></a></span></span><span> </span><span id="local-6989586621679095369"><span class="annot"><span class="annottext">Integer
+</span><a href="#local-6989586621679095369"><span class="hs-identifier hs-var">r</span></a></span></span><span> </span><span id="local-6989586621679095368"><span class="annot"><span class="annottext">Integer
+</span><a href="#local-6989586621679095368"><span class="hs-identifier hs-var">den</span></a></span></span><span>
+</span><span id="line-19"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Integer
+</span><a href="#local-6989586621679095370"><span class="hs-identifier hs-var">q</span></a></span><span> </span><span class="annot"><span class="annottext">Integer -&gt; Integer -&gt; Bool
+forall a. Eq a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">==</span></span><span> </span><span class="annot"><span class="annottext">Integer
+</span><span class="hs-number">0</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Integer -&gt; Doc AnsiStyle
+forall a ann. Pretty a =&gt; a -&gt; Doc ann
+</span><span class="hs-identifier hs-var">pretty</span></span><span> </span><span class="annot"><span class="annottext">Integer
+</span><a href="#local-6989586621679095369"><span class="hs-identifier hs-var">r</span></a></span><span> </span><span class="annot"><span class="annottext">Doc AnsiStyle -&gt; Doc AnsiStyle -&gt; Doc AnsiStyle
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">[Char] -&gt; Doc AnsiStyle
+forall a ann. Pretty a =&gt; a -&gt; Doc ann
+</span><span class="hs-identifier hs-var">pretty</span></span><span> </span><span class="annot"><span class="annottext">[Char]
+</span><span class="hs-string">&quot;/&quot;</span></span><span> </span><span class="annot"><span class="annottext">Doc AnsiStyle -&gt; Doc AnsiStyle -&gt; Doc AnsiStyle
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Integer -&gt; Doc AnsiStyle
+forall a ann. Pretty a =&gt; a -&gt; Doc ann
+</span><span class="hs-identifier hs-var">pretty</span></span><span> </span><span class="annot"><span class="annottext">Integer
+</span><a href="#local-6989586621679095368"><span class="hs-identifier hs-var">den</span></a></span><span>
+</span><span id="line-20"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Integer
+</span><a href="#local-6989586621679095369"><span class="hs-identifier hs-var">r</span></a></span><span> </span><span class="annot"><span class="annottext">Integer -&gt; Integer -&gt; Bool
+forall a. Ord a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">&lt;</span></span><span> </span><span class="annot"><span class="annottext">Integer
+</span><span class="hs-number">0</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Integer -&gt; Doc AnsiStyle
+forall a ann. Pretty a =&gt; a -&gt; Doc ann
+</span><span class="hs-identifier hs-var">pretty</span></span><span> </span><span class="annot"><span class="annottext">Integer
+</span><a href="#local-6989586621679095370"><span class="hs-identifier hs-var">q</span></a></span><span> </span><span class="annot"><span class="annottext">Doc AnsiStyle -&gt; Doc AnsiStyle -&gt; Doc AnsiStyle
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">[Char] -&gt; Doc AnsiStyle
+forall a ann. Pretty a =&gt; a -&gt; Doc ann
+</span><span class="hs-identifier hs-var">pretty</span></span><span> </span><span class="annot"><span class="annottext">[Char]
+</span><span class="hs-string">&quot;-&quot;</span></span><span> </span><span class="annot"><span class="annottext">Doc AnsiStyle -&gt; Doc AnsiStyle -&gt; Doc AnsiStyle
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Integer -&gt; Doc AnsiStyle
+forall a ann. Pretty a =&gt; a -&gt; Doc ann
+</span><span class="hs-identifier hs-var">pretty</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Integer -&gt; Integer
+forall a. Num a =&gt; a -&gt; a
+</span><span class="hs-identifier hs-var">abs</span></span><span> </span><span class="annot"><span class="annottext">Integer
+</span><a href="#local-6989586621679095369"><span class="hs-identifier hs-var">r</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Doc AnsiStyle -&gt; Doc AnsiStyle -&gt; Doc AnsiStyle
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">[Char] -&gt; Doc AnsiStyle
+forall a ann. Pretty a =&gt; a -&gt; Doc ann
+</span><span class="hs-identifier hs-var">pretty</span></span><span> </span><span class="annot"><span class="annottext">[Char]
+</span><span class="hs-string">&quot;/&quot;</span></span><span> </span><span class="annot"><span class="annottext">Doc AnsiStyle -&gt; Doc AnsiStyle -&gt; Doc AnsiStyle
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Integer -&gt; Doc AnsiStyle
+forall a ann. Pretty a =&gt; a -&gt; Doc ann
+</span><span class="hs-identifier hs-var">pretty</span></span><span> </span><span class="annot"><span class="annottext">Integer
+</span><a href="#local-6989586621679095368"><span class="hs-identifier hs-var">den</span></a></span><span>
+</span><span id="line-21"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">otherwise</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Integer -&gt; Doc AnsiStyle
+forall a ann. Pretty a =&gt; a -&gt; Doc ann
+</span><span class="hs-identifier hs-var">pretty</span></span><span> </span><span class="annot"><span class="annottext">Integer
+</span><a href="#local-6989586621679095370"><span class="hs-identifier hs-var">q</span></a></span><span> </span><span class="annot"><span class="annottext">Doc AnsiStyle -&gt; Doc AnsiStyle -&gt; Doc AnsiStyle
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">[Char] -&gt; Doc AnsiStyle
+forall a ann. Pretty a =&gt; a -&gt; Doc ann
+</span><span class="hs-identifier hs-var">pretty</span></span><span> </span><span class="annot"><span class="annottext">[Char]
+</span><span class="hs-string">&quot;+&quot;</span></span><span> </span><span class="annot"><span class="annottext">Doc AnsiStyle -&gt; Doc AnsiStyle -&gt; Doc AnsiStyle
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Integer -&gt; Doc AnsiStyle
+forall a ann. Pretty a =&gt; a -&gt; Doc ann
+</span><span class="hs-identifier hs-var">pretty</span></span><span> </span><span class="annot"><span class="annottext">Integer
+</span><a href="#local-6989586621679095369"><span class="hs-identifier hs-var">r</span></a></span><span> </span><span class="annot"><span class="annottext">Doc AnsiStyle -&gt; Doc AnsiStyle -&gt; Doc AnsiStyle
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">[Char] -&gt; Doc AnsiStyle
+forall a ann. Pretty a =&gt; a -&gt; Doc ann
+</span><span class="hs-identifier hs-var">pretty</span></span><span> </span><span class="annot"><span class="annottext">[Char]
+</span><span class="hs-string">&quot;/&quot;</span></span><span> </span><span class="annot"><span class="annottext">Doc AnsiStyle -&gt; Doc AnsiStyle -&gt; Doc AnsiStyle
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Integer -&gt; Doc AnsiStyle
+forall a ann. Pretty a =&gt; a -&gt; Doc ann
+</span><span class="hs-identifier hs-var">pretty</span></span><span> </span><span class="annot"><span class="annottext">Integer
+</span><a href="#local-6989586621679095368"><span class="hs-identifier hs-var">den</span></a></span><span>
+</span><span id="line-22"></span><span>
+</span><span id="line-23"></span><span class="hs-comment">-- | Prettifies `Data.ByteString.ByteString`.</span><span>
+</span><span id="line-24"></span><span class="annot"><a href="HW3.Pretty.html#prettyByteString"><span class="hs-identifier hs-type">prettyByteString</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">BS.ByteString</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Doc</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">AnsiStyle</span></span><span>
+</span><span id="line-25"></span><span id="prettyByteString"><span class="annot"><span class="annottext">prettyByteString :: ByteString -&gt; Doc AnsiStyle
+</span><a href="HW3.Pretty.html#prettyByteString"><span class="hs-identifier hs-var hs-var">prettyByteString</span></a></span></span><span> </span><span id="local-6989586621679095364"><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621679095364"><span class="hs-identifier hs-var">s</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(Doc AnsiStyle -&gt; Doc AnsiStyle -&gt; Doc AnsiStyle)
+-&gt; Doc AnsiStyle -&gt; [Doc AnsiStyle] -&gt; Doc AnsiStyle
+forall (t :: * -&gt; *) b a.
+Foldable t =&gt;
+(b -&gt; a -&gt; b) -&gt; b -&gt; t a -&gt; b
+</span><span class="hs-identifier hs-var">foldl</span></span><span> </span><span class="annot"><span class="annottext">Doc AnsiStyle -&gt; Doc AnsiStyle -&gt; Doc AnsiStyle
+forall ann. Doc ann -&gt; Doc ann -&gt; Doc ann
+</span><span class="hs-operator hs-var">(&lt;+&gt;)</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[Char] -&gt; Doc AnsiStyle
+forall a ann. Pretty a =&gt; a -&gt; Doc ann
+</span><span class="hs-identifier hs-var">pretty</span></span><span> </span><span class="annot"><span class="annottext">[Char]
+</span><span class="hs-string">&quot;[#&quot;</span></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(Word8 -&gt; Doc AnsiStyle) -&gt; [Word8] -&gt; [Doc AnsiStyle]
+forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
+</span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span id="local-6989586621679095362"><span class="annot"><span class="annottext">Word8
+</span><a href="#local-6989586621679095362"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">[Char] -&gt; Doc AnsiStyle
+forall a ann. Pretty a =&gt; a -&gt; Doc ann
+</span><span class="hs-identifier hs-var">pretty</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[Char] -&gt; Word8 -&gt; [Char]
+forall r. PrintfType r =&gt; [Char] -&gt; r
+</span><span class="hs-identifier hs-var">printf</span></span><span> </span><span class="annot"><span class="annottext">[Char]
+</span><span class="hs-string">&quot;%02x&quot;</span></span><span> </span><span class="annot"><span class="annottext">Word8
+</span><a href="#local-6989586621679095362"><span class="hs-identifier hs-var">x</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ByteString -&gt; [Word8]
+</span><span class="hs-identifier hs-var">BS.unpack</span></span><span> </span><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621679095364"><span class="hs-identifier hs-var">s</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">[Doc AnsiStyle] -&gt; [Doc AnsiStyle] -&gt; [Doc AnsiStyle]
+forall a. [a] -&gt; [a] -&gt; [a]
+</span><span class="hs-operator hs-var">++</span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">[Char] -&gt; Doc AnsiStyle
+forall a ann. Pretty a =&gt; a -&gt; Doc ann
+</span><span class="hs-identifier hs-var">pretty</span></span><span> </span><span class="annot"><span class="annottext">[Char]
+</span><span class="hs-string">&quot;#]&quot;</span></span><span class="hs-special">]</span><span class="hs-special">)</span><span>
+</span><span id="line-26"></span><span>
+</span><span id="line-27"></span><span class="hs-comment">-- | Prettifies `HiValue`.</span><span>
+</span><span id="line-28"></span><span class="annot"><a href="HW3.Pretty.html#prettyValue"><span class="hs-identifier hs-type">prettyValue</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="HW3.Base.html#HiValue"><span class="hs-identifier hs-type">HiValue</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Doc</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">AnsiStyle</span></span><span>
+</span><span id="line-29"></span><span id="prettyValue"><span class="annot"><span class="annottext">prettyValue :: HiValue -&gt; Doc AnsiStyle
+</span><a href="HW3.Pretty.html#prettyValue"><span class="hs-identifier hs-var hs-var">prettyValue</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="HW3.Base.html#HiValueNumber"><span class="hs-identifier hs-type">HiValueNumber</span></a></span><span> </span><span id="local-6989586621679095359"><span class="annot"><span class="annottext">Rational
+</span><a href="#local-6989586621679095359"><span class="hs-identifier hs-var">n</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-30"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621679095358"><span class="annot"><span class="annottext">den :: Integer
+</span><a href="#local-6989586621679095358"><span class="hs-identifier hs-var hs-var">den</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Rational -&gt; Integer
+forall a. Ratio a -&gt; a
+</span><span class="hs-identifier hs-var">denominator</span></span><span> </span><span class="annot"><span class="annottext">Rational
+</span><a href="#local-6989586621679095359"><span class="hs-identifier hs-var">n</span></a></span><span>
+</span><span id="line-31"></span><span>      </span><span class="hs-special">(</span><span id="local-6989586621679095357"><span class="annot"><span class="annottext">Integer
+</span><a href="#local-6989586621679095357"><span class="hs-identifier hs-var">q</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679095356"><span class="annot"><span class="annottext">Integer
+</span><a href="#local-6989586621679095356"><span class="hs-identifier hs-var">r</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Integer -&gt; Integer -&gt; (Integer, Integer)
+forall a. Integral a =&gt; a -&gt; a -&gt; (a, a)
+</span><span class="hs-identifier hs-var">quotRem</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Rational -&gt; Integer
+forall a. Ratio a -&gt; a
+</span><span class="hs-identifier hs-var">numerator</span></span><span> </span><span class="annot"><span class="annottext">Rational
+</span><a href="#local-6989586621679095359"><span class="hs-identifier hs-var">n</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Integer
+</span><a href="#local-6989586621679095358"><span class="hs-identifier hs-var">den</span></a></span><span>
+</span><span id="line-32"></span><span>  </span><span class="hs-keyword">in</span><span> </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">Integer
+</span><a href="#local-6989586621679095356"><span class="hs-identifier hs-var">r</span></a></span><span> </span><span class="annot"><span class="annottext">Integer -&gt; Integer -&gt; Bool
+forall a. Eq a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">==</span></span><span> </span><span class="annot"><span class="annottext">Integer
+</span><span class="hs-number">0</span></span><span>
+</span><span id="line-33"></span><span>     </span><span class="hs-keyword">then</span><span> </span><span class="annot"><span class="annottext">Integer -&gt; Doc AnsiStyle
+forall a ann. Pretty a =&gt; a -&gt; Doc ann
+</span><span class="hs-identifier hs-var">pretty</span></span><span> </span><span class="annot"><span class="annottext">Integer
+</span><a href="#local-6989586621679095357"><span class="hs-identifier hs-var">q</span></a></span><span>
+</span><span id="line-34"></span><span>     </span><span class="hs-keyword">else</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Rational -&gt; (Scientific, Maybe Int)
+</span><span class="hs-identifier hs-var">fromRationalRepetendUnlimited</span></span><span> </span><span class="annot"><span class="annottext">Rational
+</span><a href="#local-6989586621679095359"><span class="hs-identifier hs-var">n</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-35"></span><span>       </span><span class="hs-special">(</span><span id="local-6989586621679095354"><span class="annot"><span class="annottext">Scientific
+</span><a href="#local-6989586621679095354"><span class="hs-identifier hs-var">s</span></a></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Maybe Int
+</span><span class="hs-identifier hs-var">Nothing</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">[Char] -&gt; Doc AnsiStyle
+forall a ann. Pretty a =&gt; a -&gt; Doc ann
+</span><span class="hs-identifier hs-var">pretty</span></span><span> </span><span class="annot"><span class="annottext">([Char] -&gt; Doc AnsiStyle) -&gt; [Char] -&gt; Doc AnsiStyle
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">FPFormat -&gt; Maybe Int -&gt; Scientific -&gt; [Char]
+</span><span class="hs-identifier hs-var">formatScientific</span></span><span> </span><span class="annot"><span class="annottext">FPFormat
+</span><span class="hs-identifier hs-var">Fixed</span></span><span> </span><span class="annot"><span class="annottext">Maybe Int
+forall a. Maybe a
+</span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="annot"><span class="annottext">Scientific
+</span><a href="#local-6989586621679095354"><span class="hs-identifier hs-var">s</span></a></span><span> </span><span class="hs-comment">-- finite length fraction</span><span>
+</span><span id="line-36"></span><span>       </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Scientific
+</span><span class="hs-identifier">_</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span class="annot"><span class="annottext">Int
+</span><span class="hs-identifier">_</span></span><span class="hs-special">)</span><span>  </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Integer -&gt; Integer -&gt; Integer -&gt; Doc AnsiStyle
+</span><a href="HW3.Pretty.html#prettyMixedFraction"><span class="hs-identifier hs-var">prettyMixedFraction</span></a></span><span> </span><span class="annot"><span class="annottext">Integer
+</span><a href="#local-6989586621679095357"><span class="hs-identifier hs-var">q</span></a></span><span> </span><span class="annot"><span class="annottext">Integer
+</span><a href="#local-6989586621679095356"><span class="hs-identifier hs-var">r</span></a></span><span> </span><span class="annot"><span class="annottext">Integer
+</span><a href="#local-6989586621679095358"><span class="hs-identifier hs-var">den</span></a></span><span> </span><span class="hs-comment">-- mixed or proper fraction</span><span>
+</span><span id="line-37"></span><span class="annot"><a href="HW3.Pretty.html#prettyValue"><span class="hs-identifier hs-var">prettyValue</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="HW3.Base.html#HiValueBool"><span class="hs-identifier hs-type">HiValueBool</span></a></span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">True</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Char] -&gt; Doc AnsiStyle
+forall a ann. Pretty a =&gt; a -&gt; Doc ann
+</span><span class="hs-identifier hs-var">pretty</span></span><span> </span><span class="annot"><span class="annottext">[Char]
+</span><span class="hs-string">&quot;true&quot;</span></span><span>
+</span><span id="line-38"></span><span class="annot"><a href="HW3.Pretty.html#prettyValue"><span class="hs-identifier hs-var">prettyValue</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="HW3.Base.html#HiValueBool"><span class="hs-identifier hs-type">HiValueBool</span></a></span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">False</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Char] -&gt; Doc AnsiStyle
+forall a ann. Pretty a =&gt; a -&gt; Doc ann
+</span><span class="hs-identifier hs-var">pretty</span></span><span> </span><span class="annot"><span class="annottext">[Char]
+</span><span class="hs-string">&quot;false&quot;</span></span><span>
+</span><span id="line-39"></span><span class="annot"><a href="HW3.Pretty.html#prettyValue"><span class="hs-identifier hs-var">prettyValue</span></a></span><span> </span><span class="annot"><span class="annottext">HiValue
+</span><a href="HW3.Base.html#HiValueNull"><span class="hs-identifier hs-var">HiValueNull</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Char] -&gt; Doc AnsiStyle
+forall a ann. Pretty a =&gt; a -&gt; Doc ann
+</span><span class="hs-identifier hs-var">pretty</span></span><span> </span><span class="annot"><span class="annottext">[Char]
+</span><span class="hs-string">&quot;null&quot;</span></span><span>
+</span><span id="line-40"></span><span class="annot"><a href="HW3.Pretty.html#prettyValue"><span class="hs-identifier hs-var">prettyValue</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="HW3.Base.html#HiValueString"><span class="hs-identifier hs-type">HiValueString</span></a></span><span> </span><span id="local-6989586621679095350"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679095350"><span class="hs-identifier hs-var">s</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Doc AnsiStyle
+forall a ann. Show a =&gt; a -&gt; Doc ann
+</span><span class="hs-identifier hs-var">viaShow</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679095350"><span class="hs-identifier hs-var">s</span></a></span><span>
+</span><span id="line-41"></span><span class="annot"><a href="HW3.Pretty.html#prettyValue"><span class="hs-identifier hs-var">prettyValue</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="HW3.Base.html#HiValueFunction"><span class="hs-identifier hs-type">HiValueFunction</span></a></span><span> </span><span id="local-6989586621679095348"><span class="annot"><span class="annottext">HiFun
+</span><a href="#local-6989586621679095348"><span class="hs-identifier hs-var">f</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe [Char] -&gt; Doc AnsiStyle
+forall a ann. Pretty a =&gt; a -&gt; Doc ann
+</span><span class="hs-identifier hs-var">pretty</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">HiFun -&gt; Map HiFun [Char] -&gt; Maybe [Char]
+forall k a. Ord k =&gt; k -&gt; Map k a -&gt; Maybe a
+</span><span class="hs-identifier hs-var">Data.Map.Strict.lookup</span></span><span> </span><span class="annot"><span class="annottext">HiFun
+</span><a href="#local-6989586621679095348"><span class="hs-identifier hs-var">f</span></a></span><span> </span><span class="annot"><span class="annottext">Map HiFun [Char]
+</span><a href="HW3.BaseUtility.html#funNamesMap"><span class="hs-identifier hs-var">funNamesMap</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-42"></span><span class="annot"><a href="HW3.Pretty.html#prettyValue"><span class="hs-identifier hs-var">prettyValue</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="HW3.Base.html#HiValueList"><span class="hs-identifier hs-type">HiValueList</span></a></span><span> </span><span id="local-6989586621679095346"><span class="annot"><span class="annottext">Seq HiValue
+</span><a href="#local-6989586621679095346"><span class="hs-identifier hs-var">list</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span>
+</span><span id="line-43"></span><span>  </span><span class="annot"><span class="annottext">[Char] -&gt; Doc AnsiStyle
+forall a ann. Pretty a =&gt; a -&gt; Doc ann
+</span><span class="hs-identifier hs-var">pretty</span></span><span> </span><span class="annot"><span class="annottext">[Char]
+</span><span class="hs-string">&quot;[ &quot;</span></span><span> </span><span class="annot"><span class="annottext">Doc AnsiStyle -&gt; Doc AnsiStyle -&gt; Doc AnsiStyle
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="hs-special">(</span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">Seq HiValue -&gt; Bool
+forall (t :: * -&gt; *) a. Foldable t =&gt; t a -&gt; Bool
+</span><span class="hs-identifier hs-var">null</span></span><span> </span><span class="annot"><span class="annottext">Seq HiValue
+</span><a href="#local-6989586621679095346"><span class="hs-identifier hs-var">list</span></a></span><span> </span><span class="hs-keyword">then</span><span> </span><span class="annot"><span class="annottext">[Char] -&gt; Doc AnsiStyle
+forall a ann. Pretty a =&gt; a -&gt; Doc ann
+</span><span class="hs-identifier hs-var">pretty</span></span><span> </span><span class="annot"><span class="annottext">[Char]
+</span><span class="hs-string">&quot;&quot;</span></span><span> </span><span class="hs-keyword">else</span><span> </span><span class="annot"><span class="annottext">(Doc AnsiStyle -&gt; Doc AnsiStyle -&gt; Doc AnsiStyle)
+-&gt; Seq (Doc AnsiStyle) -&gt; Doc AnsiStyle
+forall (t :: * -&gt; *) a. Foldable t =&gt; (a -&gt; a -&gt; a) -&gt; t a -&gt; a
+</span><span class="hs-identifier hs-var">foldl1</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span id="local-6989586621679095343"><span class="annot"><span class="annottext">Doc AnsiStyle
+</span><a href="#local-6989586621679095343"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span id="local-6989586621679095342"><span class="annot"><span class="annottext">Doc AnsiStyle
+</span><a href="#local-6989586621679095342"><span class="hs-identifier hs-var">b</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Doc AnsiStyle
+</span><a href="#local-6989586621679095343"><span class="hs-identifier hs-var">a</span></a></span><span> </span><span class="annot"><span class="annottext">Doc AnsiStyle -&gt; Doc AnsiStyle -&gt; Doc AnsiStyle
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">[Char] -&gt; Doc AnsiStyle
+forall a ann. Pretty a =&gt; a -&gt; Doc ann
+</span><span class="hs-identifier hs-var">pretty</span></span><span> </span><span class="annot"><span class="annottext">[Char]
+</span><span class="hs-string">&quot;, &quot;</span></span><span> </span><span class="annot"><span class="annottext">Doc AnsiStyle -&gt; Doc AnsiStyle -&gt; Doc AnsiStyle
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Doc AnsiStyle
+</span><a href="#local-6989586621679095342"><span class="hs-identifier hs-var">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(HiValue -&gt; Doc AnsiStyle) -&gt; Seq HiValue -&gt; Seq (Doc AnsiStyle)
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-identifier hs-var">fmap</span></span><span> </span><span class="annot"><span class="annottext">HiValue -&gt; Doc AnsiStyle
+</span><a href="HW3.Pretty.html#prettyValue"><span class="hs-identifier hs-var">prettyValue</span></a></span><span> </span><span class="annot"><span class="annottext">Seq HiValue
+</span><a href="#local-6989586621679095346"><span class="hs-identifier hs-var">list</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Doc AnsiStyle -&gt; Doc AnsiStyle -&gt; Doc AnsiStyle
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">[Char] -&gt; Doc AnsiStyle
+forall a ann. Pretty a =&gt; a -&gt; Doc ann
+</span><span class="hs-identifier hs-var">pretty</span></span><span> </span><span class="annot"><span class="annottext">[Char]
+</span><span class="hs-string">&quot; ]&quot;</span></span><span>
+</span><span id="line-44"></span><span>
+</span><span id="line-45"></span><span class="annot"><a href="HW3.Pretty.html#prettyValue"><span class="hs-identifier hs-var">prettyValue</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="HW3.Base.html#HiValueBytes"><span class="hs-identifier hs-type">HiValueBytes</span></a></span><span> </span><span id="local-6989586621679095340"><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621679095340"><span class="hs-identifier hs-var">s</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; Doc AnsiStyle
+</span><a href="HW3.Pretty.html#prettyByteString"><span class="hs-identifier hs-var">prettyByteString</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621679095340"><span class="hs-identifier hs-var">s</span></a></span><span>
+</span><span id="line-46"></span><span class="annot"><a href="HW3.Pretty.html#prettyValue"><span class="hs-identifier hs-var">prettyValue</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="HW3.Base.html#HiValueTime"><span class="hs-identifier hs-type">HiValueTime</span></a></span><span> </span><span id="local-6989586621679095338"><span class="annot"><span class="annottext">UTCTime
+</span><a href="#local-6989586621679095338"><span class="hs-identifier hs-var">time</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Char] -&gt; Doc AnsiStyle
+forall a ann. Pretty a =&gt; a -&gt; Doc ann
+</span><span class="hs-identifier hs-var">pretty</span></span><span> </span><span class="annot"><span class="annottext">[Char]
+</span><span class="hs-string">&quot;parse-time(\&quot;&quot;</span></span><span> </span><span class="annot"><span class="annottext">Doc AnsiStyle -&gt; Doc AnsiStyle -&gt; Doc AnsiStyle
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">UTCTime -&gt; Doc AnsiStyle
+forall a ann. Show a =&gt; a -&gt; Doc ann
+</span><span class="hs-identifier hs-var">viaShow</span></span><span> </span><span class="annot"><span class="annottext">UTCTime
+</span><a href="#local-6989586621679095338"><span class="hs-identifier hs-var">time</span></a></span><span> </span><span class="annot"><span class="annottext">Doc AnsiStyle -&gt; Doc AnsiStyle -&gt; Doc AnsiStyle
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">[Char] -&gt; Doc AnsiStyle
+forall a ann. Pretty a =&gt; a -&gt; Doc ann
+</span><span class="hs-identifier hs-var">pretty</span></span><span> </span><span class="annot"><span class="annottext">[Char]
+</span><span class="hs-string">&quot;\&quot;)&quot;</span></span><span>
+</span><span id="line-47"></span><span class="annot"><a href="HW3.Pretty.html#prettyValue"><span class="hs-identifier hs-var">prettyValue</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="HW3.Base.html#HiValueDict"><span class="hs-identifier hs-type">HiValueDict</span></a></span><span> </span><span id="local-6989586621679095336"><span class="annot"><span class="annottext">Map HiValue HiValue
+</span><a href="#local-6989586621679095336"><span class="hs-identifier hs-var">dict</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-48"></span><span>  </span><span class="annot"><span class="annottext">[Char] -&gt; Doc AnsiStyle
+forall a ann. Pretty a =&gt; a -&gt; Doc ann
+</span><span class="hs-identifier hs-var">pretty</span></span><span> </span><span class="annot"><span class="annottext">[Char]
+</span><span class="hs-string">&quot;{ &quot;</span></span><span> </span><span class="annot"><span class="annottext">Doc AnsiStyle -&gt; Doc AnsiStyle -&gt; Doc AnsiStyle
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="hs-special">(</span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">Map HiValue HiValue -&gt; Bool
+forall (t :: * -&gt; *) a. Foldable t =&gt; t a -&gt; Bool
+</span><span class="hs-identifier hs-var">null</span></span><span> </span><span class="annot"><span class="annottext">Map HiValue HiValue
+</span><a href="#local-6989586621679095336"><span class="hs-identifier hs-var">dict</span></a></span><span> </span><span class="hs-keyword">then</span><span> </span><span class="annot"><span class="annottext">[Char] -&gt; Doc AnsiStyle
+forall a ann. Pretty a =&gt; a -&gt; Doc ann
+</span><span class="hs-identifier hs-var">pretty</span></span><span> </span><span class="annot"><span class="annottext">[Char]
+</span><span class="hs-string">&quot;&quot;</span></span><span> </span><span class="hs-keyword">else</span><span> </span><span class="annot"><span class="annottext">Doc AnsiStyle
+</span><a href="#local-6989586621679095335"><span class="hs-identifier hs-var">prettyDict</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Doc AnsiStyle -&gt; Doc AnsiStyle -&gt; Doc AnsiStyle
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">[Char] -&gt; Doc AnsiStyle
+forall a ann. Pretty a =&gt; a -&gt; Doc ann
+</span><span class="hs-identifier hs-var">pretty</span></span><span> </span><span class="annot"><span class="annottext">[Char]
+</span><span class="hs-string">&quot; }&quot;</span></span><span>
+</span><span id="line-49"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-50"></span><span>    </span><span class="annot"><a href="#local-6989586621679095335"><span class="hs-identifier hs-type">prettyDict</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Doc</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">AnsiStyle</span></span><span>
+</span><span id="line-51"></span><span>    </span><span id="local-6989586621679095335"><span class="annot"><span class="annottext">prettyDict :: Doc AnsiStyle
+</span><a href="#local-6989586621679095335"><span class="hs-identifier hs-var hs-var">prettyDict</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(Doc AnsiStyle -&gt; Doc AnsiStyle -&gt; Doc AnsiStyle)
+-&gt; [Doc AnsiStyle] -&gt; Doc AnsiStyle
+forall (t :: * -&gt; *) a. Foldable t =&gt; (a -&gt; a -&gt; a) -&gt; t a -&gt; a
+</span><span class="hs-identifier hs-var">foldl1</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span id="local-6989586621679095334"><span class="annot"><span class="annottext">Doc AnsiStyle
+</span><a href="#local-6989586621679095334"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span id="local-6989586621679095333"><span class="annot"><span class="annottext">Doc AnsiStyle
+</span><a href="#local-6989586621679095333"><span class="hs-identifier hs-var">b</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Doc AnsiStyle
+</span><a href="#local-6989586621679095334"><span class="hs-identifier hs-var">a</span></a></span><span> </span><span class="annot"><span class="annottext">Doc AnsiStyle -&gt; Doc AnsiStyle -&gt; Doc AnsiStyle
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">[Char] -&gt; Doc AnsiStyle
+forall a ann. Pretty a =&gt; a -&gt; Doc ann
+</span><span class="hs-identifier hs-var">pretty</span></span><span> </span><span class="annot"><span class="annottext">[Char]
+</span><span class="hs-string">&quot;, &quot;</span></span><span> </span><span class="annot"><span class="annottext">Doc AnsiStyle -&gt; Doc AnsiStyle -&gt; Doc AnsiStyle
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Doc AnsiStyle
+</span><a href="#local-6989586621679095333"><span class="hs-identifier hs-var">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">((HiValue, HiValue) -&gt; Doc AnsiStyle)
+-&gt; [(HiValue, HiValue)] -&gt; [Doc AnsiStyle]
+forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
+</span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span class="hs-special">(</span><span id="local-6989586621679095332"><span class="annot"><span class="annottext">HiValue
+</span><a href="#local-6989586621679095332"><span class="hs-identifier hs-var">a</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679095331"><span class="annot"><span class="annottext">HiValue
+</span><a href="#local-6989586621679095331"><span class="hs-identifier hs-var">b</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">HiValue -&gt; Doc AnsiStyle
+</span><a href="HW3.Pretty.html#prettyValue"><span class="hs-identifier hs-var">prettyValue</span></a></span><span> </span><span class="annot"><span class="annottext">HiValue
+</span><a href="#local-6989586621679095332"><span class="hs-identifier hs-var">a</span></a></span><span> </span><span class="annot"><span class="annottext">Doc AnsiStyle -&gt; Doc AnsiStyle -&gt; Doc AnsiStyle
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">[Char] -&gt; Doc AnsiStyle
+forall a ann. Pretty a =&gt; a -&gt; Doc ann
+</span><span class="hs-identifier hs-var">pretty</span></span><span> </span><span class="annot"><span class="annottext">[Char]
+</span><span class="hs-string">&quot;: &quot;</span></span><span> </span><span class="annot"><span class="annottext">Doc AnsiStyle -&gt; Doc AnsiStyle -&gt; Doc AnsiStyle
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">HiValue -&gt; Doc AnsiStyle
+</span><a href="HW3.Pretty.html#prettyValue"><span class="hs-identifier hs-var">prettyValue</span></a></span><span> </span><span class="annot"><span class="annottext">HiValue
+</span><a href="#local-6989586621679095331"><span class="hs-identifier hs-var">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Map HiValue HiValue -&gt; [(HiValue, HiValue)]
+forall k a. Map k a -&gt; [(k, a)]
+</span><span class="hs-identifier hs-var">assocs</span></span><span> </span><span class="annot"><span class="annottext">Map HiValue HiValue
+</span><a href="#local-6989586621679095336"><span class="hs-identifier hs-var">dict</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-52"></span><span>
+</span><span id="line-53"></span><span class="annot"><a href="HW3.Pretty.html#prettyValue"><span class="hs-identifier hs-var">prettyValue</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="HW3.Base.html#HiValueAction"><span class="hs-identifier hs-type">HiValueAction</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="HW3.Base.html#HiActionRead"><span class="hs-identifier hs-type">HiActionRead</span></a></span><span> </span><span id="local-6989586621679095328"><span class="annot"><span class="annottext">[Char]
+</span><a href="#local-6989586621679095328"><span class="hs-identifier hs-var">path</span></a></span></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Char] -&gt; Doc AnsiStyle
+forall a ann. Pretty a =&gt; a -&gt; Doc ann
+</span><span class="hs-identifier hs-var">pretty</span></span><span> </span><span class="annot"><span class="annottext">[Char]
+</span><span class="hs-string">&quot;read(&quot;</span></span><span> </span><span class="annot"><span class="annottext">Doc AnsiStyle -&gt; Doc AnsiStyle -&gt; Doc AnsiStyle
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">[Char] -&gt; Doc AnsiStyle
+forall a ann. Show a =&gt; a -&gt; Doc ann
+</span><span class="hs-identifier hs-var">viaShow</span></span><span> </span><span class="annot"><span class="annottext">[Char]
+</span><a href="#local-6989586621679095328"><span class="hs-identifier hs-var">path</span></a></span><span> </span><span class="annot"><span class="annottext">Doc AnsiStyle -&gt; Doc AnsiStyle -&gt; Doc AnsiStyle
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">[Char] -&gt; Doc AnsiStyle
+forall a ann. Pretty a =&gt; a -&gt; Doc ann
+</span><span class="hs-identifier hs-var">pretty</span></span><span> </span><span class="annot"><span class="annottext">[Char]
+</span><span class="hs-string">&quot;)&quot;</span></span><span>
+</span><span id="line-54"></span><span class="annot"><a href="HW3.Pretty.html#prettyValue"><span class="hs-identifier hs-var">prettyValue</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="HW3.Base.html#HiValueAction"><span class="hs-identifier hs-type">HiValueAction</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="HW3.Base.html#HiActionWrite"><span class="hs-identifier hs-type">HiActionWrite</span></a></span><span> </span><span id="local-6989586621679095326"><span class="annot"><span class="annottext">[Char]
+</span><a href="#local-6989586621679095326"><span class="hs-identifier hs-var">path</span></a></span></span><span> </span><span id="local-6989586621679095325"><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621679095325"><span class="hs-identifier hs-var">content</span></a></span></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Char] -&gt; Doc AnsiStyle
+forall a ann. Pretty a =&gt; a -&gt; Doc ann
+</span><span class="hs-identifier hs-var">pretty</span></span><span> </span><span class="annot"><span class="annottext">[Char]
+</span><span class="hs-string">&quot;write(&quot;</span></span><span> </span><span class="annot"><span class="annottext">Doc AnsiStyle -&gt; Doc AnsiStyle -&gt; Doc AnsiStyle
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">[Char] -&gt; Doc AnsiStyle
+forall a ann. Show a =&gt; a -&gt; Doc ann
+</span><span class="hs-identifier hs-var">viaShow</span></span><span> </span><span class="annot"><span class="annottext">[Char]
+</span><a href="#local-6989586621679095326"><span class="hs-identifier hs-var">path</span></a></span><span> </span><span class="annot"><span class="annottext">Doc AnsiStyle -&gt; Doc AnsiStyle -&gt; Doc AnsiStyle
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">[Char] -&gt; Doc AnsiStyle
+forall a ann. Pretty a =&gt; a -&gt; Doc ann
+</span><span class="hs-identifier hs-var">pretty</span></span><span> </span><span class="annot"><span class="annottext">[Char]
+</span><span class="hs-string">&quot;, &quot;</span></span><span> </span><span class="annot"><span class="annottext">Doc AnsiStyle -&gt; Doc AnsiStyle -&gt; Doc AnsiStyle
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; Doc AnsiStyle
+</span><a href="HW3.Pretty.html#prettyByteString"><span class="hs-identifier hs-var">prettyByteString</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621679095325"><span class="hs-identifier hs-var">content</span></a></span><span> </span><span class="annot"><span class="annottext">Doc AnsiStyle -&gt; Doc AnsiStyle -&gt; Doc AnsiStyle
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">[Char] -&gt; Doc AnsiStyle
+forall a ann. Pretty a =&gt; a -&gt; Doc ann
+</span><span class="hs-identifier hs-var">pretty</span></span><span> </span><span class="annot"><span class="annottext">[Char]
+</span><span class="hs-string">&quot;)&quot;</span></span><span>
+</span><span id="line-55"></span><span class="annot"><a href="HW3.Pretty.html#prettyValue"><span class="hs-identifier hs-var">prettyValue</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="HW3.Base.html#HiValueAction"><span class="hs-identifier hs-type">HiValueAction</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="HW3.Base.html#HiActionMkDir"><span class="hs-identifier hs-type">HiActionMkDir</span></a></span><span> </span><span id="local-6989586621679095323"><span class="annot"><span class="annottext">[Char]
+</span><a href="#local-6989586621679095323"><span class="hs-identifier hs-var">dir</span></a></span></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Char] -&gt; Doc AnsiStyle
+forall a ann. Pretty a =&gt; a -&gt; Doc ann
+</span><span class="hs-identifier hs-var">pretty</span></span><span> </span><span class="annot"><span class="annottext">[Char]
+</span><span class="hs-string">&quot;mkdir(&quot;</span></span><span> </span><span class="annot"><span class="annottext">Doc AnsiStyle -&gt; Doc AnsiStyle -&gt; Doc AnsiStyle
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">[Char] -&gt; Doc AnsiStyle
+forall a ann. Show a =&gt; a -&gt; Doc ann
+</span><span class="hs-identifier hs-var">viaShow</span></span><span> </span><span class="annot"><span class="annottext">[Char]
+</span><a href="#local-6989586621679095323"><span class="hs-identifier hs-var">dir</span></a></span><span> </span><span class="annot"><span class="annottext">Doc AnsiStyle -&gt; Doc AnsiStyle -&gt; Doc AnsiStyle
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">[Char] -&gt; Doc AnsiStyle
+forall a ann. Pretty a =&gt; a -&gt; Doc ann
+</span><span class="hs-identifier hs-var">pretty</span></span><span> </span><span class="annot"><span class="annottext">[Char]
+</span><span class="hs-string">&quot;)&quot;</span></span><span>
+</span><span id="line-56"></span><span class="annot"><a href="HW3.Pretty.html#prettyValue"><span class="hs-identifier hs-var">prettyValue</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="HW3.Base.html#HiValueAction"><span class="hs-identifier hs-type">HiValueAction</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="HW3.Base.html#HiActionChDir"><span class="hs-identifier hs-type">HiActionChDir</span></a></span><span> </span><span id="local-6989586621679095321"><span class="annot"><span class="annottext">[Char]
+</span><a href="#local-6989586621679095321"><span class="hs-identifier hs-var">dir</span></a></span></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Char] -&gt; Doc AnsiStyle
+forall a ann. Pretty a =&gt; a -&gt; Doc ann
+</span><span class="hs-identifier hs-var">pretty</span></span><span> </span><span class="annot"><span class="annottext">[Char]
+</span><span class="hs-string">&quot;cd(&quot;</span></span><span> </span><span class="annot"><span class="annottext">Doc AnsiStyle -&gt; Doc AnsiStyle -&gt; Doc AnsiStyle
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">[Char] -&gt; Doc AnsiStyle
+forall a ann. Show a =&gt; a -&gt; Doc ann
+</span><span class="hs-identifier hs-var">viaShow</span></span><span> </span><span class="annot"><span class="annottext">[Char]
+</span><a href="#local-6989586621679095321"><span class="hs-identifier hs-var">dir</span></a></span><span> </span><span class="annot"><span class="annottext">Doc AnsiStyle -&gt; Doc AnsiStyle -&gt; Doc AnsiStyle
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">[Char] -&gt; Doc AnsiStyle
+forall a ann. Pretty a =&gt; a -&gt; Doc ann
+</span><span class="hs-identifier hs-var">pretty</span></span><span> </span><span class="annot"><span class="annottext">[Char]
+</span><span class="hs-string">&quot;)&quot;</span></span><span>
+</span><span id="line-57"></span><span class="annot"><a href="HW3.Pretty.html#prettyValue"><span class="hs-identifier hs-var">prettyValue</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="HW3.Base.html#HiValueAction"><span class="hs-identifier hs-type">HiValueAction</span></a></span><span> </span><span class="annot"><span class="annottext">HiAction
+</span><a href="HW3.Base.html#HiActionCwd"><span class="hs-identifier hs-var">HiActionCwd</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Char] -&gt; Doc AnsiStyle
+forall a ann. Pretty a =&gt; a -&gt; Doc ann
+</span><span class="hs-identifier hs-var">pretty</span></span><span> </span><span class="annot"><span class="annottext">[Char]
+</span><span class="hs-string">&quot;cwd&quot;</span></span><span>
+</span><span id="line-58"></span><span class="annot"><a href="HW3.Pretty.html#prettyValue"><span class="hs-identifier hs-var">prettyValue</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="HW3.Base.html#HiValueAction"><span class="hs-identifier hs-type">HiValueAction</span></a></span><span> </span><span class="annot"><span class="annottext">HiAction
+</span><a href="HW3.Base.html#HiActionNow"><span class="hs-identifier hs-var">HiActionNow</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Char] -&gt; Doc AnsiStyle
+forall a ann. Pretty a =&gt; a -&gt; Doc ann
+</span><span class="hs-identifier hs-var">pretty</span></span><span> </span><span class="annot"><span class="annottext">[Char]
+</span><span class="hs-string">&quot;now&quot;</span></span><span>
+</span><span id="line-59"></span><span class="annot"><a href="HW3.Pretty.html#prettyValue"><span class="hs-identifier hs-var">prettyValue</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="HW3.Base.html#HiValueAction"><span class="hs-identifier hs-type">HiValueAction</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="HW3.Base.html#HiActionRand"><span class="hs-identifier hs-type">HiActionRand</span></a></span><span> </span><span id="local-6989586621679095317"><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679095317"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span id="local-6989586621679095316"><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679095316"><span class="hs-identifier hs-var">b</span></a></span></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Char] -&gt; Doc AnsiStyle
+forall a ann. Pretty a =&gt; a -&gt; Doc ann
+</span><span class="hs-identifier hs-var">pretty</span></span><span> </span><span class="annot"><span class="annottext">[Char]
+</span><span class="hs-string">&quot;rand(&quot;</span></span><span> </span><span class="annot"><span class="annottext">Doc AnsiStyle -&gt; Doc AnsiStyle -&gt; Doc AnsiStyle
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Doc AnsiStyle
+forall a ann. Pretty a =&gt; a -&gt; Doc ann
+</span><span class="hs-identifier hs-var">pretty</span></span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679095317"><span class="hs-identifier hs-var">a</span></a></span><span> </span><span class="annot"><span class="annottext">Doc AnsiStyle -&gt; Doc AnsiStyle -&gt; Doc AnsiStyle
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">[Char] -&gt; Doc AnsiStyle
+forall a ann. Pretty a =&gt; a -&gt; Doc ann
+</span><span class="hs-identifier hs-var">pretty</span></span><span> </span><span class="annot"><span class="annottext">[Char]
+</span><span class="hs-string">&quot;, &quot;</span></span><span> </span><span class="annot"><span class="annottext">Doc AnsiStyle -&gt; Doc AnsiStyle -&gt; Doc AnsiStyle
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Doc AnsiStyle
+forall a ann. Pretty a =&gt; a -&gt; Doc ann
+</span><span class="hs-identifier hs-var">pretty</span></span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679095316"><span class="hs-identifier hs-var">b</span></a></span><span> </span><span class="annot"><span class="annottext">Doc AnsiStyle -&gt; Doc AnsiStyle -&gt; Doc AnsiStyle
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">[Char] -&gt; Doc AnsiStyle
+forall a ann. Pretty a =&gt; a -&gt; Doc ann
+</span><span class="hs-identifier hs-var">pretty</span></span><span> </span><span class="annot"><span class="annottext">[Char]
+</span><span class="hs-string">&quot;)&quot;</span></span><span>
+</span><span id="line-60"></span><span class="annot"><a href="HW3.Pretty.html#prettyValue"><span class="hs-identifier hs-var">prettyValue</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="HW3.Base.html#HiValueAction"><span class="hs-identifier hs-type">HiValueAction</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="HW3.Base.html#HiActionEcho"><span class="hs-identifier hs-type">HiActionEcho</span></a></span><span> </span><span id="local-6989586621679095314"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679095314"><span class="hs-identifier hs-var">s</span></a></span></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Char] -&gt; Doc AnsiStyle
+forall a ann. Pretty a =&gt; a -&gt; Doc ann
+</span><span class="hs-identifier hs-var">pretty</span></span><span> </span><span class="annot"><span class="annottext">[Char]
+</span><span class="hs-string">&quot;echo(&quot;</span></span><span> </span><span class="annot"><span class="annottext">Doc AnsiStyle -&gt; Doc AnsiStyle -&gt; Doc AnsiStyle
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Doc AnsiStyle
+forall a ann. Show a =&gt; a -&gt; Doc ann
+</span><span class="hs-identifier hs-var">viaShow</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679095314"><span class="hs-identifier hs-var">s</span></a></span><span> </span><span class="annot"><span class="annottext">Doc AnsiStyle -&gt; Doc AnsiStyle -&gt; Doc AnsiStyle
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">[Char] -&gt; Doc AnsiStyle
+forall a ann. Pretty a =&gt; a -&gt; Doc ann
+</span><span class="hs-identifier hs-var">pretty</span></span><span> </span><span class="annot"><span class="annottext">[Char]
+</span><span class="hs-string">&quot;)&quot;</span></span><span>
+</span><span id="line-61"></span></pre></body></html>

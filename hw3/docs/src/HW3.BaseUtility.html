@@ -1,0 +1,145 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">HW3.BaseUtility</span><span>
+</span><span id="line-2"></span><span>  </span><span class="hs-special">(</span><span>
+</span><span id="line-3"></span><span>    </span><span class="annot"><a href="HW3.BaseUtility.html#funNames"><span class="hs-identifier">funNames</span></a></span><span>
+</span><span id="line-4"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="HW3.BaseUtility.html#funNamesMap"><span class="hs-identifier">funNamesMap</span></a></span><span>
+</span><span id="line-5"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-6"></span><span>
+</span><span id="line-7"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Map.Strict</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Map</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">fromList</span></span><span class="hs-special">)</span><span>
+</span><span id="line-8"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="HW3.Base.html"><span class="hs-identifier">HW3.Base</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="HW3.Base.html#HiFun"><span class="hs-identifier">HiFun</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-9"></span><span>
+</span><span id="line-10"></span><span class="hs-comment">-- | List of pairs (`HiFun`, name of `HiFun` used in interpreter).</span><span>
+</span><span id="line-11"></span><span class="annot"><a href="HW3.BaseUtility.html#funNames"><span class="hs-identifier hs-type">funNames</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="hs-special">(</span><span class="annot"><a href="HW3.Base.html#HiFun"><span class="hs-identifier hs-type">HiFun</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span class="hs-special">)</span><span class="hs-special">]</span><span>
+</span><span id="line-12"></span><span id="funNames"><span class="annot"><span class="annottext">funNames :: [(HiFun, String)]
+</span><a href="HW3.BaseUtility.html#funNames"><span class="hs-identifier hs-var hs-var">funNames</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">[</span><span>
+</span><span id="line-13"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="annottext">HiFun
+</span><a href="HW3.Base.html#HiFunDiv"><span class="hs-identifier hs-var">HiFunDiv</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;div&quot;</span></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-14"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="annottext">HiFun
+</span><a href="HW3.Base.html#HiFunMul"><span class="hs-identifier hs-var">HiFunMul</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;mul&quot;</span></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-15"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="annottext">HiFun
+</span><a href="HW3.Base.html#HiFunAdd"><span class="hs-identifier hs-var">HiFunAdd</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;add&quot;</span></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-16"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="annottext">HiFun
+</span><a href="HW3.Base.html#HiFunSub"><span class="hs-identifier hs-var">HiFunSub</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;sub&quot;</span></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-17"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="annottext">HiFun
+</span><a href="HW3.Base.html#HiFunAnd"><span class="hs-identifier hs-var">HiFunAnd</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;and&quot;</span></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-18"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="annottext">HiFun
+</span><a href="HW3.Base.html#HiFunOr"><span class="hs-identifier hs-var">HiFunOr</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;or&quot;</span></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-19"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="annottext">HiFun
+</span><a href="HW3.Base.html#HiFunLessThan"><span class="hs-identifier hs-var">HiFunLessThan</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;less-than&quot;</span></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-20"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="annottext">HiFun
+</span><a href="HW3.Base.html#HiFunGreaterThan"><span class="hs-identifier hs-var">HiFunGreaterThan</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;greater-than&quot;</span></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-21"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="annottext">HiFun
+</span><a href="HW3.Base.html#HiFunEquals"><span class="hs-identifier hs-var">HiFunEquals</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;equals&quot;</span></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-22"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="annottext">HiFun
+</span><a href="HW3.Base.html#HiFunNotLessThan"><span class="hs-identifier hs-var">HiFunNotLessThan</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;not-less-than&quot;</span></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-23"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="annottext">HiFun
+</span><a href="HW3.Base.html#HiFunNotGreaterThan"><span class="hs-identifier hs-var">HiFunNotGreaterThan</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;not-greater-than&quot;</span></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-24"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="annottext">HiFun
+</span><a href="HW3.Base.html#HiFunNotEquals"><span class="hs-identifier hs-var">HiFunNotEquals</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;not-equals&quot;</span></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-25"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="annottext">HiFun
+</span><a href="HW3.Base.html#HiFunNot"><span class="hs-identifier hs-var">HiFunNot</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;not&quot;</span></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-26"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="annottext">HiFun
+</span><a href="HW3.Base.html#HiFunIf"><span class="hs-identifier hs-var">HiFunIf</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;if&quot;</span></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-27"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="annottext">HiFun
+</span><a href="HW3.Base.html#HiFunLength"><span class="hs-identifier hs-var">HiFunLength</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;length&quot;</span></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-28"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="annottext">HiFun
+</span><a href="HW3.Base.html#HiFunToUpper"><span class="hs-identifier hs-var">HiFunToUpper</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;to-upper&quot;</span></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-29"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="annottext">HiFun
+</span><a href="HW3.Base.html#HiFunToLower"><span class="hs-identifier hs-var">HiFunToLower</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;to-lower&quot;</span></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-30"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="annottext">HiFun
+</span><a href="HW3.Base.html#HiFunReverse"><span class="hs-identifier hs-var">HiFunReverse</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;reverse&quot;</span></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-31"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="annottext">HiFun
+</span><a href="HW3.Base.html#HiFunTrim"><span class="hs-identifier hs-var">HiFunTrim</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;trim&quot;</span></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-32"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="annottext">HiFun
+</span><a href="HW3.Base.html#HiFunList"><span class="hs-identifier hs-var">HiFunList</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;list&quot;</span></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-33"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="annottext">HiFun
+</span><a href="HW3.Base.html#HiFunRange"><span class="hs-identifier hs-var">HiFunRange</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;range&quot;</span></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-34"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="annottext">HiFun
+</span><a href="HW3.Base.html#HiFunFold"><span class="hs-identifier hs-var">HiFunFold</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;fold&quot;</span></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-35"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="annottext">HiFun
+</span><a href="HW3.Base.html#HiFunPackBytes"><span class="hs-identifier hs-var">HiFunPackBytes</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;pack-bytes&quot;</span></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-36"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="annottext">HiFun
+</span><a href="HW3.Base.html#HiFunUnpackBytes"><span class="hs-identifier hs-var">HiFunUnpackBytes</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;unpack-bytes&quot;</span></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-37"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="annottext">HiFun
+</span><a href="HW3.Base.html#HiFunEncodeUtf8"><span class="hs-identifier hs-var">HiFunEncodeUtf8</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;encode-utf8&quot;</span></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-38"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="annottext">HiFun
+</span><a href="HW3.Base.html#HiFunDecodeUtf8"><span class="hs-identifier hs-var">HiFunDecodeUtf8</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;decode-utf8&quot;</span></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-39"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="annottext">HiFun
+</span><a href="HW3.Base.html#HiFunZip"><span class="hs-identifier hs-var">HiFunZip</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;zip&quot;</span></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-40"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="annottext">HiFun
+</span><a href="HW3.Base.html#HiFunUnzip"><span class="hs-identifier hs-var">HiFunUnzip</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;unzip&quot;</span></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-41"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="annottext">HiFun
+</span><a href="HW3.Base.html#HiFunSerialise"><span class="hs-identifier hs-var">HiFunSerialise</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;serialise&quot;</span></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-42"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="annottext">HiFun
+</span><a href="HW3.Base.html#HiFunDeserialise"><span class="hs-identifier hs-var">HiFunDeserialise</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;deserialise&quot;</span></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-43"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="annottext">HiFun
+</span><a href="HW3.Base.html#HiFunRead"><span class="hs-identifier hs-var">HiFunRead</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;read&quot;</span></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-44"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="annottext">HiFun
+</span><a href="HW3.Base.html#HiFunWrite"><span class="hs-identifier hs-var">HiFunWrite</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;write&quot;</span></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-45"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="annottext">HiFun
+</span><a href="HW3.Base.html#HiFunMkDir"><span class="hs-identifier hs-var">HiFunMkDir</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;mkdir&quot;</span></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-46"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="annottext">HiFun
+</span><a href="HW3.Base.html#HiFunChDir"><span class="hs-identifier hs-var">HiFunChDir</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;cd&quot;</span></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-47"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="annottext">HiFun
+</span><a href="HW3.Base.html#HiFunParseTime"><span class="hs-identifier hs-var">HiFunParseTime</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;parse-time&quot;</span></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-48"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="annottext">HiFun
+</span><a href="HW3.Base.html#HiFunRand"><span class="hs-identifier hs-var">HiFunRand</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;rand&quot;</span></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-49"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="annottext">HiFun
+</span><a href="HW3.Base.html#HiFunEcho"><span class="hs-identifier hs-var">HiFunEcho</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;echo&quot;</span></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-50"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="annottext">HiFun
+</span><a href="HW3.Base.html#HiFunCount"><span class="hs-identifier hs-var">HiFunCount</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;count&quot;</span></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-51"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="annottext">HiFun
+</span><a href="HW3.Base.html#HiFunKeys"><span class="hs-identifier hs-var">HiFunKeys</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;keys&quot;</span></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-52"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="annottext">HiFun
+</span><a href="HW3.Base.html#HiFunValues"><span class="hs-identifier hs-var">HiFunValues</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;values&quot;</span></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-53"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="annottext">HiFun
+</span><a href="HW3.Base.html#HiFunInvert"><span class="hs-identifier hs-var">HiFunInvert</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;invert&quot;</span></span><span class="hs-special">)</span><span class="hs-special">]</span><span>
+</span><span id="line-54"></span><span>
+</span><span id="line-55"></span><span class="hs-comment">-- | `Map` from `HiFun` to name used in interpreter.</span><span>
+</span><span id="line-56"></span><span class="annot"><a href="HW3.BaseUtility.html#funNamesMap"><span class="hs-identifier hs-type">funNamesMap</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Map</span></span><span> </span><span class="annot"><a href="HW3.Base.html#HiFun"><span class="hs-identifier hs-type">HiFun</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span>
+</span><span id="line-57"></span><span id="funNamesMap"><span class="annot"><span class="annottext">funNamesMap :: Map HiFun String
+</span><a href="HW3.BaseUtility.html#funNamesMap"><span class="hs-identifier hs-var hs-var">funNamesMap</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[(HiFun, String)] -&gt; Map HiFun String
+forall k a. Ord k =&gt; [(k, a)] -&gt; Map k a
+</span><span class="hs-identifier hs-var">fromList</span></span><span> </span><span class="annot"><span class="annottext">[(HiFun, String)]
+</span><a href="HW3.BaseUtility.html#funNames"><span class="hs-identifier hs-var">funNames</span></a></span><span>
+</span><span id="line-58"></span></pre></body></html>

@@ -1,0 +1,133 @@
+cabal-version: 1.12
+
+-- This file has been generated from package.yaml by hpack version 0.34.4.
+--
+-- see: https://github.com/sol/hpack
+
+name:           hw3
+version:        0.1.0.0
+description:    Please see the README on GitHub at <https://github.com/Stepavly/hw3#readme>
+homepage:       https://github.com/Stepavly/hw3#readme
+bug-reports:    https://github.com/Stepavly/hw3/issues
+author:         Semyon Stepanov
+maintainer:     stepavly@gmail.com
+copyright:      2021 Semyon Stepanov
+license:        BSD3
+build-type:     Simple
+extra-source-files:
+    README.md
+    ChangeLog.md
+
+source-repository head
+  type: git
+  location: https://github.com/Stepavly/hw3
+
+library
+  exposed-modules:
+      HW3.Action
+      HW3.Base
+      HW3.BaseUtility
+      HW3.Evaluator
+      HW3.Parser
+      HW3.Pretty
+  hs-source-dirs:
+      src
+  build-depends:
+      base
+    , bytestring
+    , containers
+    , directory
+    , haskeline
+    , hedgehog
+    , megaparsec
+    , parser-combinators
+    , prettyprinter
+    , prettyprinter-ansi-terminal
+    , random >=1.2.0
+    , scientific
+    , serialise
+    , tasty
+    , tasty-hedgehog
+    , tasty-hspec
+    , tasty-quickcheck
+    , text
+    , time
+    , transformers
+    , zlib
+  default-language: Haskell2010
+
+executable hi
+  main-is: Main.hs
+  other-modules:
+      Paths_hw3
+  hs-source-dirs:
+      app
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      base
+    , bytestring
+    , containers
+    , directory
+    , haskeline
+    , hedgehog
+    , hw3
+    , megaparsec
+    , parser-combinators
+    , prettyprinter
+    , prettyprinter-ansi-terminal
+    , random >=1.2.0
+    , scientific
+    , serialise
+    , tasty
+    , tasty-hedgehog
+    , tasty-hspec
+    , tasty-quickcheck
+    , text
+    , time
+    , transformers
+    , zlib
+  default-language: Haskell2010
+
+test-suite Tests
+  type: exitcode-stdio-1.0
+  main-is: Spec.hs
+  other-modules:
+      T1
+      T10
+      T11
+      T2
+      T3
+      T4
+      T5
+      T6
+      T7
+      T8
+      T9
+      TestUtility
+      Paths_hw3
+  hs-source-dirs:
+      test
+  build-depends:
+      base
+    , bytestring
+    , containers
+    , directory
+    , haskeline
+    , hedgehog
+    , hw3
+    , megaparsec
+    , parser-combinators
+    , prettyprinter
+    , prettyprinter-ansi-terminal
+    , random >=1.2.0
+    , scientific
+    , serialise
+    , tasty
+    , tasty-hedgehog
+    , tasty-hspec
+    , tasty-quickcheck
+    , text
+    , time
+    , transformers
+    , zlib
+  default-language: Haskell2010

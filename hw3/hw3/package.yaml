@@ -1,0 +1,68 @@
+name:                hw3
+version:             0.1.0.0
+github:              "Stepavly/hw3"
+license:             BSD3
+author:              "Semyon Stepanov"
+maintainer:          "stepavly@gmail.com"
+copyright:           "2021 Semyon Stepanov"
+
+extra-source-files:
+- README.md
+- ChangeLog.md
+
+# Metadata used when publishing your package
+# synopsis:            Short description of your package
+# category:            Web
+
+# To avoid duplicated efforts in documentation and dealing with the
+# complications of embedding Haddock markup inside cabal files, it is
+# common to point users to the README.md file.
+description:         Please see the README on GitHub at <https://github.com/Stepavly/hw3#readme>
+
+dependencies:
+- base
+- megaparsec
+- parser-combinators
+- scientific
+- text
+- prettyprinter
+- prettyprinter-ansi-terminal
+- haskeline
+- transformers
+- containers
+- bytestring
+- zlib
+- serialise
+- directory
+- time
+- random >=1.2.0
+- tasty-hspec
+- tasty
+- tasty-quickcheck
+- tasty-hedgehog
+- hedgehog
+
+library:
+  source-dirs: src
+  when:
+  - condition: false
+    other-modules: Paths_hw3
+
+executables:
+  hi:
+    main:                Main.hs
+    source-dirs:         app
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - hw3
+
+tests: # Remove comment for running custom tests
+  Tests:
+    main:                 Spec.hs
+    source-dirs:
+    - test
+    dependencies:
+    - hw3
